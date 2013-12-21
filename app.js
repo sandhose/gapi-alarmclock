@@ -144,4 +144,6 @@ App.prototype = {
 
 App.prototype = _.extend(App.prototype, events.EventEmitter.prototype);
 
-module.exports = new App();
+module.exports = function(options) {
+  return new App(options);
+};

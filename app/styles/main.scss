@@ -1,0 +1,104 @@
+$icon-font-path: "/bower_components/sass-bootstrap/fonts/";
+
+@import 'sass-bootstrap/lib/bootstrap';
+
+body {
+    padding-top: 70px;
+}
+
+
+$compoment-border: solid 1px #EEE;
+.dashboard {
+    .compoment {
+        border-radius: 3px;
+        border: $compoment-border;
+        margin-bottom: 30px;
+
+        header {
+            padding: 5px 20px;
+            border-bottom: $compoment-border;
+        }
+        section {
+            padding: 20px;
+        }
+        footer {
+            padding: 10px 20px;
+            border-top: $compoment-border;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: right;
+            background-color: #FAFAFA;
+            color: #555;
+        }
+        
+        &.no-border {
+            border: none;
+            footer, header {
+                border: none;
+            }
+        }
+        
+        // Alarm Clock Compment
+        &.alarm-clock {
+            .time {
+                font-size: 8em;
+            }
+        }
+
+        // Google compoment
+        &.google {
+            .profile {
+                height: 100px;
+
+                .avatar {
+                    float: left;
+                    height: 100px;
+                    width: 100px;
+                    border-radius: 64px;
+                    overflow: hidden;
+                }
+
+                .summary {
+                    height: 120px;
+                    margin-left: 100px;
+                    padding: 20px 20px;
+
+                    .name {
+                        font-size: 2em;
+                        line-height: 30px;
+                    }
+                    .localisation {
+                        color: #666;
+                        font-size: 0.9em;
+                    }
+                }
+            }
+        }
+
+        &.event {
+            .time {
+                font-size: 3em;
+            }
+            .name {
+                font-size: 6em;
+            }
+        }
+
+        &.music {
+            .artwork {
+                overflow: hidden;
+                height: 162px;
+                width: 162px;
+                border-radius: 82px;
+                padding: 2px;
+                border: solid 4px #EEE;
+                img {
+                    overflow: hidden;
+                    height: 150px;
+                    width: 150px;
+                    border-radius: 75px;
+                }
+            }
+        }
+    }
+}

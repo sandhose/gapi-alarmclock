@@ -17,3 +17,6 @@ npm-debug.log
 node_modules
 
 public
+.tmp
+.sass-cache
+app/bower_components
