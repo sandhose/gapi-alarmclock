@@ -44,9 +44,8 @@ WebServer.prototype = {
     this.app.on("exit", this.exit.bind(this));
 
     this.server = http.createServer(this.handleRequest.bind(this));
-    //this.server.on("request", this.handleRequest.bind(this));
     this.server.addListener("connection",function(stream) {
-      stream.setTimeout(4000);
+      stream.setTimeout(1000);
     });
 
     this.publicPath = path.join(process.cwd(), this.options.publicDir);

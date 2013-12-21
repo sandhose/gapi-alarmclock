@@ -23,7 +23,8 @@ App.prototype = {
         type: "static"
       },
       "rest-api": true,
-      "nconf-storage": true
+      "nconf-storage": true,
+      "general-api": true
     }
   },
 
@@ -147,3 +148,7 @@ App.prototype = _.extend(App.prototype, events.EventEmitter.prototype);
 module.exports = function(options) {
   return new App(options);
 };
+
+if(require.main === module) {
+  module.exports();
+}
