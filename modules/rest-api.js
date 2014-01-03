@@ -29,10 +29,13 @@ RestApi.prototype = {
         apiPath = this._trimSlashes(requestPath).split("/");
 
     var sendResponse = function(responseObj, statusCode) {
-      statusCode = statusCode || 200;
-      res.writeHead(statusCode, {"Content-Type": "text/json"});
-      res.write(JSON.stringify(responseObj));
-      res.end();
+      if(responseObj !== "done") {
+        statusCode = statusCode || 200;
+        res.writeHead(statusCode, {"Content-Type": "text/json"});
+        res.write(JSON.stringify(responseObj));
+        res.end();
+      }
+      
       cb();
     };
 

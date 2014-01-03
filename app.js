@@ -24,7 +24,8 @@ App.prototype = {
       },
       "rest-api": true,
       "nconf-storage": true,
-      "general-api": true
+      "general-api": true,
+      "google-api": true
     }
   },
 

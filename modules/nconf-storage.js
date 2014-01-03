@@ -67,7 +67,7 @@ Storage.prototype = {
   },
 
   // Return namespaced storage
-  namespace: function(namespace) {
+  getNamespace: function(namespace) {
     return new StorageNamespace(namespace, this);
   },
 

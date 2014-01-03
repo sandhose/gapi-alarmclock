@@ -9,7 +9,8 @@
   "dependencies": {
     "nconf": "~0.6.9",
     "underscore": "~1.5.2",
-    "winston": "~0.7.2"
+    "winston": "~0.7.2",
+    "googleapis": "~0.4.7"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
