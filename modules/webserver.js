@@ -32,6 +32,7 @@ WebServer.prototype = {
     type: "static",
     indexName: "index.html"
   },
+  connectionStreams:  [],
 
   // Setup the web server
   setup: function setup(options) {
@@ -45,8 +46,8 @@ WebServer.prototype = {
 
     this.server = http.createServer(this.handleRequest.bind(this));
     this.server.addListener("connection",function(stream) {
-      stream.setTimeout(1000);
-    });
+      this.connectionStreams.push(stream);
+    }.bind(this));
 
     this.publicPath = path.join(process.cwd(), this.options.publicDir);
 
@@ -137,6 +138,9 @@ WebServer.prototype = {
 
   // Exit
   exit: function exit() {
+    for(var i in this.connectionStreams) {
+      this.connectionStreams[i].end();
+    }
     logger.info("closing server");
     this.server.close();
   },

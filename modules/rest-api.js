@@ -46,13 +46,28 @@ RestApi.prototype = {
       return;
     }
     
-    var apiObj = this.getAPI(apiPath);
+    var apiObj = this.getAPI(apiPath),
+        body = "";
     if(typeof apiObj === "function") {
-      apiObj(req, res, sendResponse);
+      req.on("data", function(chunk) {
+        body += chunk;
+      });
+
+      req.on("end", function() {
+        req.body = body;
+        apiObj(req, res, sendResponse);
+      });
     }
     else if(typeof apiObj === "object") {
       if(typeof apiObj[req.method] === "function") {
-        apiObj[req.method](req, res, sendResponse);
+        req.on("data", function(chunk) {
+          body += chunk;
+        });
+
+        req.on("end", function() {
+          req.body = body;
+          apiObj[req.method](req, res, sendResponse);
+        });
       }
       else {
         sendResponse({

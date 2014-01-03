@@ -1,5 +1,6 @@
 "use strict";
 var url = require("url");
+var querystring = require("querystring");
 
 var GoogleAPI = function GoogleAPI(theApp, name) {
   this.app = theApp;
@@ -28,6 +29,7 @@ GoogleAPI.prototype = {
     var self = this;
     this.storage = this.app.getStorage(this);
     this.OAuth2Credentials.refresh_token = this.storage.get("refresh_token");
+    this.calendarId = this.storage.get("calendarId");
 
     this.apiEngine = this.app.getModule("rest-api");
     this.apiEngine.registerAPI("google", {
@@ -49,6 +51,51 @@ GoogleAPI.prototype = {
             callback(err, 500);
           }
         });
+      },
+      calendar: {
+        GET: function(req, res, callback) {
+          self.fetchCalendar(self.calendarId, function(err, result) {
+            if(!err) {
+              callback(result);
+            }
+            else {
+              callback(err, 400);
+            }
+          });
+        },
+        POST: function(req, res, callback) {
+          var parsedBody = querystring.parse(req.body);
+          self.fetchCalendar(parsedBody.id, function(err, result) {
+            if(!err) {
+              if(result.id === parsedBody.id) {
+                self.setCalendar(result.id);
+                callback(result);
+              }
+              else {
+                callback({ error: "calendar id does not matches" }, 500);
+              }
+            }
+            else {
+              callback(err, 400);
+            }
+          });
+        },
+        list: function(req, res, callback) {
+          self.fetchCalendarList(function(err, result) {
+            if(err) {
+              return;
+            }
+            var calendars = [];
+            for(var i = 0; i < result.items.length; i++) {
+              var item = result.items[i];
+              calendars.push({
+                id: item.id,
+                name: item.summary
+              });
+            }
+            callback(calendars);
+          });
+        }
       }
     });
 
@@ -64,6 +111,31 @@ GoogleAPI.prototype = {
       });
     }
 
+  },
+
+  setCalendar: function(calendarId) {
+    this.calendarId = calendarId;
+    this.storage.set("calendarId", calendarId);
+  },
+
+  fetchCalendarList: function(callback) {
+    var authClient = this.getOAuth2Client();
+    this.gapi.discover("calendar", "v3").execute(function(err, client) {
+      client.calendar.calendarList.list()
+        .withAuthClient(authClient)
+        .execute(callback);
+    });
+    return this;
+  },
+
+  fetchCalendar: function(id, callback) {
+    var authClient = this.getOAuth2Client();
+    this.gapi.discover("calendar", "v3").execute(function(err, client) {
+      client.calendar.calendars.get({ calendarId: id })
+        .withAuthClient(authClient)
+        .execute(callback);
+    });
+    return this;
   },
 
   _refreshOAuth2Client: function() {
