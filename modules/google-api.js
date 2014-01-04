@@ -2,6 +2,20 @@
 var url = require("url");
 var querystring = require("querystring");
 
+
+// Date formatting for GAPI
+function toISODateString(d) {
+  function pad(n){
+    return n < 10 ? "0" + n : n;
+  }
+  return d.getUTCFullYear() + "-" +
+    pad(d.getUTCMonth()+1)+"-" +
+    pad(d.getUTCDate())+"T" +
+    pad(d.getUTCHours())+":" +
+    pad(d.getUTCMinutes())+":" +
+    pad(d.getUTCSeconds())+"Z";
+}
+
 var GoogleAPI = function GoogleAPI(theApp, name) {
   this.app = theApp;
   this.logger = this.app.getLogger();
@@ -95,6 +109,27 @@ GoogleAPI.prototype = {
             }
             callback(calendars);
           });
+        },
+        events: {
+          GET: function(req, res, callback) {
+            self.fetchEvents({}, function(err, result) {
+              callback(result);
+            });
+          },
+          today: function(req, res, callback) {
+            self.fetchEvents({
+              startTime: "today"
+            }, function(err, result) {
+              callback(result);
+            });
+          },
+          tomorrow: function(req, res, callback) {
+            self.fetchEvents({
+              startTime: "tomorrow"
+            }, function(err, result) {
+              callback(result);
+            });
+          }
         }
       }
     });
@@ -136,6 +171,87 @@ GoogleAPI.prototype = {
         .execute(callback);
     });
     return this;
+  },
+
+  fetchEvents: function(options, callback) {
+    if(!this.calendarId) {
+      callback("no calendar id set", false);
+    }
+
+    var id = this.calendarId;
+    var maxResults = options.maxResults || 10;
+
+    var startTime, parsedTime;
+    if(options.startTime === "now") {
+      startTime = new Date();
+    }
+    else if(options.startTime === "today") {
+      startTime = new Date();
+      startTime.setHours(0);
+      startTime.setMinutes(0);
+      startTime.setSeconds(0);
+    }
+    else if(options.startTime === "tomorrow") {
+      startTime = new Date();
+      startTime.setDate(startTime.getDate() + 1);
+      startTime.setHours(0);
+      startTime.setMinutes(0);
+      startTime.setSeconds(0);
+    }
+    else if(options.startTime instanceof Date) {
+      startTime = options.startTime;
+    }
+    else if(typeof options.startTime === "string") {
+      startTime = options.startTime;
+    }
+    else {
+      startTime = new Date();
+    }
+
+    if(startTime instanceof Date) {
+      parsedTime = toISODateString(startTime);
+    }
+    else {
+      parsedTime = startTime;
+    }
+
+    var authClient = this.getOAuth2Client(),
+        self = this;
+    this.gapi.discover("calendar", "v3").execute(function(err, client) {
+      client.calendar.events.list({
+        timeMin: parsedTime,
+        singleEvents: true,
+        orderBy: "startTime",
+        calendarId: id,
+        maxResults: maxResults
+      })
+        .withAuthClient(authClient)
+        .execute(function(err, result) {
+          if(err) {
+            callback(err);
+          }
+          else {
+            var events = [];
+            for(var i in result.items) {
+              events.push(self.eventSummary(result.items[i]));
+            }
+            callback(false, events);
+          }
+        });
+    });
+  },
+
+  eventSummary: function(event) {
+    return {
+      id: event.id,
+      summary: event.summary,
+      status: event.status,
+      location: event.location,
+      description: event.description,
+      start: event.start.dateTime,
+      end: event.end.dateTime,
+      link: event.htmlLink
+    };
   },
 
   _refreshOAuth2Client: function() {
