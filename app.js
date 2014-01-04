@@ -134,6 +134,14 @@ App.prototype = {
     this.logger.info("using", name, "for data storage");
   },
 
+  // Set wake up
+  setWakeUp: function setWakeUp(wakeDate) {
+    if(wakeDate instanceof Date) {
+      this.logger.info("next wake up set to " + wakeDate.toString());
+      // @TODO not effective
+    }
+  },
+
   // Exit the app
   exit: function exit() {
     if(this.storage) {

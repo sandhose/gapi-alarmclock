@@ -145,6 +145,9 @@ GoogleAPI.prototype = {
         }
       });
     }
+    else {
+      this.logger.warn("no refresh token");
+    }
 
   },
 
@@ -271,7 +274,52 @@ GoogleAPI.prototype = {
   },
 
   synchronize: function() {
-    // @TODO sync with api
+    var self = this;
+    this.logger.info("synchronizing");
+    if(this.calendarId && this.OAuth2Credentials.refresh_token) {
+      this.fetchEvents({
+        startTime: "today",
+        maxResults: 1
+      }, function(err, results) {
+        if(err) {
+          self.logger(err);
+        }
+        else {
+          if(new Date(results[0].start) < new Date()) {
+            self.fetchEvents({
+              startTime: "tomorrow",
+              maxResults: 1
+            }, function(err, results) {
+              if(err) {
+                self.logger(err);
+              }
+              else {
+                self.wakeEvent = results[0];
+                self.prepareWake();
+              }
+            });
+          }
+          else {
+            self.wakeEvent = results[0];
+            self.prepareWake();
+          }
+        }
+      });
+    }
+    else {
+      this.logger("not logged to google apis");
+    }
+  },
+
+  prepareWake: function() {
+    if(this.wakeEvent) {
+      var wakeDate = new Date(this.wakeEvent.start);
+      wakeDate.setHours(wakeDate.getHours() - 1);
+      this.app.setWakeUp(wakeDate);
+    }
+    else {
+      this.logger.warn("no wake event set");
+    }
   },
 
   generateAuthURL: function() {
