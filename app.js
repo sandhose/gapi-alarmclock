@@ -59,6 +59,10 @@ App.prototype = {
       this.logger.info("Goodbye!");
       this.emit("appEnd");
     }.bind(this));
+
+    this.wakeTimeout = null;
+
+    setImmediate(this.requestSync.bind(this));
   },
 
   // Get logger for submodules
@@ -137,8 +141,79 @@ App.prototype = {
   // Set wake up
   setWakeUp: function setWakeUp(wakeDate) {
     if(wakeDate instanceof Date) {
+      if(wakeDate < new Date()) {
+        this.logger.warn("wake date already passed");
+        return;
+      }
       this.logger.info("next wake up set to " + wakeDate.toString());
-      // @TODO not effective
+      this.wakeDate = wakeDate;
+      this.emit("wake date set");
+    }
+  },
+
+  // Request syncing
+  requestSync: function requestSync() {
+    var self = this,
+        syncPending = 0;
+    this.emit("do sync", function done(async) {
+      syncPending++;
+      var doneAsync = function doneAsync() {
+        syncPending--;
+        if(syncPending === 0) {
+          self.doneSync();
+        }
+      };
+      if(async) {
+        return doneAsync;
+      }
+      else {
+        doneAsync();
+      }
+    });
+  },
+
+  doneSync: function doneSync() {
+    var syncInterval = 60;
+    this.logger.log("sync done!");
+    this.logger.info("next sync in " + syncInterval + " seconds");
+    this.nextSync = setTimeout(this.requestSync.bind(this), syncInterval * 1000);
+    if(this.wakeTimeout === null) {
+      this.wake();
+    }
+  },
+
+  cancelNextSync: function cancelNextSync() {
+    this.logger.warn("next sync cancelled");
+    clearTimeout(this.nextSync);
+  },
+
+  wake: function wake() {
+    if(this.wakeTimeout) {
+      clearTimeout(this.wakeTimeout);
+      this.wakeTimeout = null;
+    }
+
+    var now = new Date();
+    var wakeDate = this.wakeDate;
+    if(wakeDate instanceof Date) {
+      var diff = wakeDate - now;
+      this.logger.info("wake up in " + Math.round(diff / 1000) + " seconds");
+      // Wake tollerence -> -10s/+60s
+      if(diff <= 10000 && diff >= -60000) {
+        this.logger.info("WAKE UP!");
+        this.emit("wake up");
+      }
+      // Check wake up every 30min
+      else if(diff > 1300 * 1000) {
+        this.wakeTimeout = setTimeout(this.wake.bind(this), 1300 * 1000);
+      }
+      // Wake up time is near...
+      else {
+        this.wakeTimeout = setTimeout(this.wake.bind(this), diff);
+      }
+    }
+    else {
+      this.logger.warn("wake date not set");
     }
   },
 
@@ -147,6 +222,8 @@ App.prototype = {
     if(this.storage) {
       this.storage.save();
     }
+    clearTimeout(this.wakeTimeout);
+    clearTimeout(this.nextSync);
     this.logger.profile("runtime");
     this.emit("exit");
   }

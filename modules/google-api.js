@@ -138,7 +138,7 @@ GoogleAPI.prototype = {
       this.getOAuth2Client().refreshAccessToken(function(err, credentials) {
         if(!err) {
           self.OAuth2Credentials.access_token = credentials.access_token;
-          self.synchronize();
+          //self.synchronize();
         }
         else {
           self.logger.error(err);
@@ -149,6 +149,8 @@ GoogleAPI.prototype = {
       this.logger.warn("no refresh token");
     }
 
+
+    this.app.on("do sync", this.synchronize.bind(this));
   },
 
   setCalendar: function(calendarId) {
@@ -273,8 +275,9 @@ GoogleAPI.prototype = {
     return this.OAuth2Client;
   },
 
-  synchronize: function() {
+  synchronize: function(async) {
     var self = this;
+    var done = async(true);
     this.logger.info("synchronizing");
     if(this.calendarId && this.OAuth2Credentials.refresh_token) {
       this.fetchEvents({
@@ -297,17 +300,20 @@ GoogleAPI.prototype = {
                 self.wakeEvent = results[0];
                 self.prepareWake();
               }
+              done();
             });
           }
           else {
             self.wakeEvent = results[0];
             self.prepareWake();
+            done();
           }
         }
       });
     }
     else {
       this.logger("not logged to google apis");
+      done();
     }
   },
 
