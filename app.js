@@ -25,7 +25,8 @@ App.prototype = {
       "rest-api": true,
       "nconf-storage": true,
       "general-api": true,
-      "google-api": true
+      "google-api": true,
+      "music-player": true
     }
   },
 
@@ -96,6 +97,7 @@ App.prototype = {
     }
     catch(e) {
       this.logger.error("could not load module", name, e);
+      console.log(e);
       return e;
     }
 
@@ -141,6 +143,12 @@ App.prototype = {
   // Set wake up
   setWakeUp: function setWakeUp(wakeDate) {
     if(wakeDate instanceof Date) {
+      var dateDiff = wakeDate - this.wakeDate;
+      if(dateDiff < 10000 && dateDiff > -10000) {
+        // Do not change for 10 seconds...
+        this.logger.info("wake date not changed");
+        return;
+      }
       if(wakeDate < new Date()) {
         this.logger.warn("wake date already passed");
         return;
@@ -173,7 +181,7 @@ App.prototype = {
   },
 
   doneSync: function doneSync() {
-    var syncInterval = 60;
+    var syncInterval = 60; // @TODO: to be configurable
     this.logger.log("sync done!");
     this.logger.info("next sync in " + syncInterval + " seconds");
     this.nextSync = setTimeout(this.requestSync.bind(this), syncInterval * 1000);

@@ -20,3 +20,5 @@ public
 .tmp
 .sass-cache
 app/bower_components
+
+audio/wake.mp3

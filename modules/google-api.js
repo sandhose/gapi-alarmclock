@@ -312,7 +312,7 @@ GoogleAPI.prototype = {
       });
     }
     else {
-      this.logger("not logged to google apis");
+      this.logger.warn("not logged to google apis");
       done();
     }
   },
