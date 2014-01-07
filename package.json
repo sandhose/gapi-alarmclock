@@ -4,7 +4,8 @@
   "author": "Sandhose <quentingliech@gmail.com>",
   "description": "An Alarm-Clock based on Node, using the Google APIs",
   "scripts": {
-    "start": "grunt"
+    "start": "grunt",
+    "test": "grunt travis --verbose"
   },
   "repository": {
     "type": "git",

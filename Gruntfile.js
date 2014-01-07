@@ -135,9 +135,9 @@ module.exports = function(grunt) {
       }
     },
 
-    
 
-    
+
+
     // Compiles Sass to CSS and generates necessary files if requested
     compass: {
       options: {
@@ -362,6 +362,8 @@ module.exports = function(grunt) {
     ]);
   });
 
+  grunt.registerTask("travis", "jshint");
+
   grunt.registerTask("server", function () {
     grunt.log.warn("The `server` task has been deprecated. Use `grunt serve` to start a server.");
     grunt.task.run(["serve"]);
@@ -375,7 +377,7 @@ module.exports = function(grunt) {
             publicDir: "/app"
           }
         }
-      }); // Do not do async 'cause of the watch task 
+      }); // Do not do async 'cause of the watch task
     }
     else {
       require("./app")().on("appEnd", this.async());
