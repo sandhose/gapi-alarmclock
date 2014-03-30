@@ -30,14 +30,14 @@ $compoment-border: solid 1px #EEE;
             background-color: #FAFAFA;
             color: #555;
         }
-        
+
         &.no-border {
             border: none;
             footer, header {
                 border: none;
             }
         }
-        
+
         // Alarm Clock Compment
         &.alarm-clock {
             .time {
@@ -81,6 +81,14 @@ $compoment-border: solid 1px #EEE;
             }
             .name {
                 font-size: 6em;
+            }
+
+            .view-calendar-btn {
+              opacity: 0;
+            }
+
+            &:hover .view-calendar-btn {
+              opacity: 1;
             }
         }
 

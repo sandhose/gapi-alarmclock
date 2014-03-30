@@ -63,7 +63,7 @@ App.prototype = {
 
     this.wakeTimeout = null;
 
-    setImmediate(this.requestSync.bind(this));
+    setTimeout(this.requestSync.bind(this), 1000);
   },
 
   // Get logger for submodules

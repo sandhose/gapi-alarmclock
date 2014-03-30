@@ -1,0 +1,12 @@
+<div class="row setup">
+  <div class="col-lg-4 step">
+    <a ng-click="login()" class="btn btn-primary btn-large">Login</a>
+  </div>
+  <div class="col-lg-4 step" ng-show="status.logged">
+    <select ng-model="calendar" ng-options="c.name for c in calendarList">
+    </select>
+  </div>
+  <div class="col-lg-4 step" ng-show="status.both">
+    <a href="#/" class="btn btn-primary btn-large">Let's go!</a>
+  </div>
+</div>

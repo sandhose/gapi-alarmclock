@@ -20,6 +20,10 @@ angular.module("alarmClockApp", [
         templateUrl: "views/settings.html",
         controller: "SettingsCtrl"
       })
+      .when("/setup", {
+        templateUrl: "views/setup.html",
+        controller: "SetupCtrl"
+      })
       .otherwise({
         redirectTo: "/"
       });

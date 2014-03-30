@@ -37,6 +37,7 @@ GoogleAPI.prototype = {
       "refresh_token": null,
       "access_token": null
     };
+    this.discoverClients();
   },
 
   load: function() {
@@ -56,8 +57,8 @@ GoogleAPI.prototype = {
         var query = url.parse(req.url, true).query;
         self.OAuthCallback(query.code, function(err) {
           if(!err) {
-            res.writeHead(200, {"Content-Type": "text/plain"});
-            res.write("Redirecting to app...");
+            res.writeHead(200, {"Content-Type": "text/html"});
+            res.write("<!DOCTYPE html><html><head><title>Redirecting</title></head><body>Redirecting...<script>window.opener.doneLogin();</script></body></html>");
             res.end();
             callback("done");
           }
@@ -68,6 +69,10 @@ GoogleAPI.prototype = {
       },
       calendar: {
         GET: function(req, res, callback) {
+          if(!self.loggedIn) {
+            callback({ error: "not logged in" }, 500);
+            return;
+          }
           self.fetchCalendar(self.calendarId, function(err, result) {
             if(!err) {
               callback(result);
@@ -78,6 +83,10 @@ GoogleAPI.prototype = {
           });
         },
         POST: function(req, res, callback) {
+          if(!self.loggedIn) {
+            callback({ error: "not logged in" }, 500);
+            return;
+          }
           var parsedBody = querystring.parse(req.body);
           self.fetchCalendar(parsedBody.id, function(err, result) {
             if(!err) {
@@ -95,6 +104,10 @@ GoogleAPI.prototype = {
           });
         },
         list: function(req, res, callback) {
+          if(!self.loggedIn) {
+            callback({ error: "not logged in" }, 500);
+            return;
+          }
           self.fetchCalendarList(function(err, result) {
             if(err) {
               return;
@@ -112,11 +125,19 @@ GoogleAPI.prototype = {
         },
         events: {
           GET: function(req, res, callback) {
+            if(!self.loggedIn) {
+              callback({ error: "not logged in" }, 500);
+              return;
+            }
             self.fetchEvents({}, function(err, result) {
               callback(result);
             });
           },
           today: function(req, res, callback) {
+            if(!self.loggedIn) {
+              callback({ error: "not logged in" }, 500);
+              return;
+            }
             self.fetchEvents({
               startTime: "today"
             }, function(err, result) {
@@ -124,12 +145,82 @@ GoogleAPI.prototype = {
             });
           },
           tomorrow: function(req, res, callback) {
+            if(!self.loggedIn) {
+              callback({ error: "not logged in" }, 500);
+              return;
+            }
             self.fetchEvents({
               startTime: "tomorrow"
             }, function(err, result) {
               callback(result);
             });
+          },
+          next: function(req, res, callback) {
+            if(!self.loggedIn) {
+              callback({ error: "not logged in" }, 500);
+              return;
+            }
+            self.fetchEvents({
+              startTime: "today",
+              maxResults: 1
+            }, function(err, results) {
+              if(err) {
+                self.logger.warn(err);
+                callback({ error: "unknown" }, 500);
+              }
+              else {
+                if(new Date(results[0].start) < new Date()) {
+                  self.fetchEvents({
+                    startTime: "tomorrow",
+                    maxResults: 1
+                  }, function(err, results) {
+                    if(err) {
+                      self.logger(err);
+                      callback({ error: "unknown" }, 500);
+                    }
+                    else {
+                      callback(results[0]);
+                    }
+                  });
+                }
+                else {
+                  callback(results[0]);
+                }
+              }
+            });
           }
+        }
+      }, // end calendar
+      user: {
+        GET: function(req, res, callback) {
+          if(!self.loggedIn) {
+            callback({ error: "not logged in" }, 500);
+            return;
+          }
+          self.fetchUserInfo(function(err, result) {
+            if(err) {
+              callback(err, 500);
+            }
+            else {
+              callback(self.formatProfile(result));
+            }
+          });
+        },
+        DELETE: function(req, res, callback) {
+          if(!self.loggedIn) {
+            callback({ error: "not logged in" }, 500);
+            return;
+          }
+          self.logout();
+          callback({ sucess: true });
+        }
+      },
+      status: {
+        GET: function(req, res, callback) {
+          callback({
+            logged: self.loggedIn,
+            calendar: self.calendarId
+          });
         }
       }
     });
@@ -138,9 +229,12 @@ GoogleAPI.prototype = {
       this.getOAuth2Client().refreshAccessToken(function(err, credentials) {
         if(!err) {
           self.OAuth2Credentials.access_token = credentials.access_token;
+          self.loggedIn = true;
           //self.synchronize();
         }
         else {
+          self.loggedIn = false;
+          self.logout();
           self.logger.error(err);
         }
       });
@@ -160,21 +254,19 @@ GoogleAPI.prototype = {
 
   fetchCalendarList: function(callback) {
     var authClient = this.getOAuth2Client();
-    this.gapi.discover("calendar", "v3").execute(function(err, client) {
-      client.calendar.calendarList.list()
-        .withAuthClient(authClient)
-        .execute(callback);
-    });
+    this.clients
+      .calendar.calendarList.list()
+      .withAuthClient(authClient)
+      .execute(callback);
     return this;
   },
 
   fetchCalendar: function(id, callback) {
     var authClient = this.getOAuth2Client();
-    this.gapi.discover("calendar", "v3").execute(function(err, client) {
-      client.calendar.calendars.get({ calendarId: id })
-        .withAuthClient(authClient)
-        .execute(callback);
-    });
+    this.clients
+      .calendar.calendars.get({ calendarId: id })
+      .withAuthClient(authClient)
+      .execute(callback);
     return this;
   },
 
@@ -222,28 +314,46 @@ GoogleAPI.prototype = {
 
     var authClient = this.getOAuth2Client(),
         self = this;
-    this.gapi.discover("calendar", "v3").execute(function(err, client) {
-      client.calendar.events.list({
+    this.clients
+      .calendar.events.list({
         timeMin: parsedTime,
         singleEvents: true,
         orderBy: "startTime",
         calendarId: id,
         maxResults: maxResults
       })
-        .withAuthClient(authClient)
-        .execute(function(err, result) {
-          if(err) {
-            callback(err);
+      .withAuthClient(authClient)
+      .execute(function(err, result) {
+        if(err) {
+          callback(err);
+        }
+        else {
+          var events = [];
+          for(var i in result.items) {
+            events.push(self.eventSummary(result.items[i]));
           }
-          else {
-            var events = [];
-            for(var i in result.items) {
-              events.push(self.eventSummary(result.items[i]));
-            }
-            callback(false, events);
-          }
-        });
-    });
+          callback(false, events);
+        }
+      });
+  },
+
+  fetchUserInfo: function(callback) {
+    var authClient = this.getOAuth2Client();
+    this.clients
+      .plus.people.get({ userId: "me" })
+      .withAuthClient(authClient)
+      .execute(callback);
+  },
+
+  formatProfile: function(data) {
+    var outData = {
+      name: data.name.givenName + " " + data.name.familyName,
+      avatar: data.image.url.replace("?sz=50", "?sz=100"),
+      location: (data.placesLived && data.placesLived[0]) ? data.placesLived[0].value : "Unknown",
+      link: data.url,
+      connected: true
+    };
+    return outData;
   },
 
   eventSummary: function(event) {
@@ -279,13 +389,13 @@ GoogleAPI.prototype = {
     var self = this;
     var done = async(true);
     this.logger.info("synchronizing");
-    if(this.calendarId && this.OAuth2Credentials.refresh_token) {
+    if(this.calendarId && this.OAuth2Credentials.refresh_token && self.loggedIn) {
       this.fetchEvents({
         startTime: "today",
         maxResults: 1
       }, function(err, results) {
         if(err) {
-          self.logger(err);
+          self.logger.warn(err);
         }
         else {
           if(new Date(results[0].start) < new Date()) {
@@ -331,8 +441,23 @@ GoogleAPI.prototype = {
   generateAuthURL: function() {
     return this.getOAuth2Client().generateAuthUrl({
       "access_type": "offline",
-      scope: "https://www.googleapis.com/auth/calendar"
+      scope: "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"
     });
+  },
+
+  discoverClients: function() {
+    var self = this;
+    this.gapi
+      .discover("calendar", "v3")
+      .discover("plus", "v1")
+      .execute(function(err, clients) {
+        if(err) {
+          self.logger.warn(err);
+          return;
+        }
+
+        self.clients = clients;
+      });
   },
 
   OAuthCallback: function(code, callback) {
@@ -356,6 +481,7 @@ GoogleAPI.prototype = {
       }
 
       self._refreshOAuth2Client();
+      self.loggedIn = true;
 
       if(!self.OAuth2Credentials.refresh_token) {
         self.revokeAccessToken();
@@ -363,6 +489,7 @@ GoogleAPI.prototype = {
           message: "had to revoke token... please re-enable the access to the Googla APIs",
           url: self.generateAuthURL()
         };
+        self.loggedIn = false;
       }
 
       if(typeof callback === "function") {
@@ -370,6 +497,15 @@ GoogleAPI.prototype = {
       }
     });
     return this;
+  },
+
+  logout: function() {
+    this.revokeAccessToken();
+    this.OAuth2Credentials = { refresh_token: null, access_token: null };
+    this.calendarId = null;
+    this.storage.set("calendarId", null);
+    this.storage.set("refresh_token", null);
+    this.loggedIn = false;
   },
 
   revokeAccessToken: function() {

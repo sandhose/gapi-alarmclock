@@ -1,7 +1,8 @@
 "use strict";
 
 var logger = console, // it will be winston logger after setup
-    os = require("os");
+    os = require("os"),
+    spawn = require("child_process").spawn;
 
 var GeneralAPI = function GeneralAPI(theApp, name) {
   this.app = theApp;
@@ -20,22 +21,38 @@ GeneralAPI.prototype = {
     this.apiEngine = this.app.getModule("rest-api");
     this.apiEngine.registerAPI("system", {
       GET: function(req, res, callback) {
-        callback({
-          os: {
-            hostname: os.hostname(),
-            type: os.type(),
-            kernel: os.release(),
-            uptime: os.uptime()
-          },
-          process: {
-            cwd: process.cwd(),
-            version: process.version
-          },
-          package: {
-            name: self.packageJson.name,
-            version: self.packageJson.version,
-            author: self.packageJson.author
+        var wifiProcess = spawn("sh", ["-c", "iw wlan0 link | grep \"SSID\""]);
+        var connectStatus = "";
+        wifiProcess.stdout.on("data", function(data) {
+          connectStatus += data;
+        });
+
+        wifiProcess.on("close", function() {
+          if(!connectStatus) {
+            connectStatus = "Ethernet";
           }
+          else {
+            connectStatus = connectStatus.substring(connectStatus.indexOf("SSID: ") + 6).replace("\n", "");
+          }
+
+          callback({
+            os: {
+              hostname: os.hostname(),
+              type: os.type(),
+              kernel: os.release(),
+              uptime: os.uptime()
+            },
+            process: {
+              cwd: process.cwd(),
+              version: process.version
+            },
+            package: {
+              name: self.packageJson.name,
+              version: self.packageJson.version,
+              author: self.packageJson.author
+            },
+            connection: connectStatus
+          });
         });
       },
       exit: function(req, res, callback) {
@@ -43,6 +60,12 @@ GeneralAPI.prototype = {
           message: "app will close"
         });
         self.app.exit();
+      }
+    });
+
+    this.apiEngine.registerAPI("wake", {
+      GET: function(req, res, callback) {
+        callback({ date: self.app.wakeDate });
       }
     });
   }
