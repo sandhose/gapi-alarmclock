@@ -35,7 +35,9 @@ App.prototype = {
     this.logger = new (winston.Logger)({
       transports: [
         new (winston.transports.Console)({
-          colorize: true
+          colorize: true,
+          timestamp: true,
+          prettyPrint: true
         }),
       ]
     });
@@ -161,6 +163,7 @@ App.prototype = {
 
   // Request syncing
   requestSync: function requestSync() {
+    clearTimeout(this.nextSync);
     var self = this,
         syncPending = 0;
     this.emit("do sync", function done(async) {

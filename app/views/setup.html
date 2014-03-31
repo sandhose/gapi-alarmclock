@@ -1,12 +1,35 @@
 <div class="row setup">
-  <div class="col-lg-4 step">
-    <a ng-click="login()" class="btn btn-primary btn-large">Login</a>
+  <div class="col-lg-4 step" ng-hide="status.logged">
+    <h3>Connect to the Google API</h3>
+    <a ng-click="login()" class="btn btn-primary btn-lg btn-setup">Login with Google</a>
+  </div>
+  <div class="compoment google col-lg-4 step" ng-show="status.logged" ng-controller="UserCtrl">
+    <header>
+      <h3>Logged as</h3>
+    </header>
+    <section>
+      <div class="profile" ng-show="user.connected">
+        <div class="avatar">
+          <img src="{{ user.avatar }}" height="100px" width="100px" />
+        </div>
+        <div class="summary">
+          <div class="name">{{ user.name }}</div>
+          <div class="localisation"><span class="glyphicon glyphicon-map-marker"></span> {{ user.location }}</div>
+        </div>
+      </div>
+    </section>
+    <footer>
+      <a href="{{ user.link }}" class="btn btn-primary">View Profile</a>
+      <button href="#" class="btn btn-danger" ng-click="logout()">Log out</button>
+    </footer>
   </div>
   <div class="col-lg-4 step" ng-show="status.logged">
-    <select ng-model="calendar" ng-options="c.name for c in calendarList">
+    <h3>Select a calendar</h3>
+    <select class="form-control" ng-model="calendar" ng-options="c.name for c in calendarList">
     </select>
   </div>
   <div class="col-lg-4 step" ng-show="status.both">
-    <a href="#/" class="btn btn-primary btn-large">Let's go!</a>
+    <h3>Setup done!</h3>
+    <a href="#/" class="btn btn-primary btn-lg btn-setup">Let's go!</a>
   </div>
 </div>

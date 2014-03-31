@@ -27,7 +27,7 @@ GoogleAPI.prototype = {
   OAuth2Config: {
     clientId: "789571319516-ch3j8s80nt0gmddnmeg5p6dijc50120k.apps.googleusercontent.com",
     clientSecret: "bfc3X3xKlikW-W5Ja2CgF7VZ",
-    redirectUrl: "http://localhost:9000/api/google/oauth2callback"
+    redirectUrl: "http://sandhose.fr:9000/api/google/oauth2callback"
   },
 
   setup: function setup() {
@@ -63,7 +63,15 @@ GoogleAPI.prototype = {
             callback("done");
           }
           else {
-            callback(err, 500);
+            if(err.url) {
+              res.writeHead(302, {
+                "Location": err.url
+              });
+              res.end();
+            }
+            else {
+              callback(err, 500);
+            }
           }
         });
       },
@@ -92,6 +100,7 @@ GoogleAPI.prototype = {
             if(!err) {
               if(result.id === parsedBody.id) {
                 self.setCalendar(result.id);
+                self.app.requestSync();
                 callback(result);
               }
               else {

@@ -16,7 +16,8 @@
     "underscore": "~1.5.2",
     "winston": "~0.7.2",
     "googleapis": "~0.4.7",
-    "lame": "~1.0.3"
+    "lame": "~1.0.3",
+    "grunt-sloc": "^0.5.2"
   },
   "devDependencies": {
     "grunt": "~0.4.1",

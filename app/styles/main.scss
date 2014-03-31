@@ -45,36 +45,6 @@ $compoment-border: solid 1px #EEE;
             }
         }
 
-        // Google compoment
-        &.google {
-            .profile {
-                height: 100px;
-
-                .avatar {
-                    float: left;
-                    height: 100px;
-                    width: 100px;
-                    border-radius: 64px;
-                    overflow: hidden;
-                }
-
-                .summary {
-                    height: 120px;
-                    margin-left: 100px;
-                    padding: 20px 20px;
-
-                    .name {
-                        font-size: 2em;
-                        line-height: 30px;
-                    }
-                    .localisation {
-                        color: #666;
-                        font-size: 0.9em;
-                    }
-                }
-            }
-        }
-
         &.event {
             .time {
                 font-size: 3em;
@@ -109,4 +79,41 @@ $compoment-border: solid 1px #EEE;
             }
         }
     }
+}
+
+.compoment.google {
+    footer {
+      padding: 10px;
+    }
+    .profile {
+        height: 100px;
+
+        .avatar {
+            float: left;
+            height: 100px;
+            width: 100px;
+            border-radius: 64px;
+            overflow: hidden;
+        }
+
+        .summary {
+            height: 120px;
+            margin-left: 100px;
+            padding: 20px 20px;
+
+            .name {
+                font-size: 2em;
+                line-height: 30px;
+            }
+            .localisation {
+                color: #666;
+                font-size: 0.9em;
+            }
+        }
+    }
+}
+
+.setup .btn-setup {
+    margin: 20px auto;
+    display: block;
 }

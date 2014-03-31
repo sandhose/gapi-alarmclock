@@ -51,6 +51,22 @@ module.exports = function(grunt) {
       }
     },
 
+    // SLOC
+    sloc: {
+      default: {
+        files: {
+          "./": [
+            "Gruntfile.js",
+            "app.js",
+            "modules/*.js",
+            "<%= yeoman.app %>/views/*.html",
+            "<%= yeoman.app %>/scripts/*.js",
+            "<%= yeoman.app %>/scripts/controllers/*.js"
+          ]
+        }
+      }
+    },
+
     // The actual grunt server settings
     connect: {
       options: {

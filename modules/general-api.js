@@ -65,7 +65,12 @@ GeneralAPI.prototype = {
 
     this.apiEngine.registerAPI("wake", {
       GET: function(req, res, callback) {
-        callback({ date: self.app.wakeDate });
+        if(self.app.wakeDate) {
+          callback({ date: self.app.wakeDate });
+        }
+        else {
+          callback({ error: "not set"}, 500);
+        }
       }
     });
   }

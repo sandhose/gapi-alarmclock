@@ -18,7 +18,6 @@ MusicPlayer.prototype = {
   },
 
   setup: function setup() {
-    console.log(this._getFilePath());
     this.app.on("wake up", this.play.bind(this));
     //this.app.on("ready", this.test.bind(this)); // for testing
     this.app.on("exit", this.stop.bind(this));
@@ -67,8 +66,6 @@ MusicPlayer.prototype = {
     setTimeout(this.stop.bind(this), 5000);
   }
 };
-
-console.log("lol");
 
 module.exports = function(theApp, name) {
   return new MusicPlayer(theApp, name);

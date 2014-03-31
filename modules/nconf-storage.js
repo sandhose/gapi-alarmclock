@@ -46,7 +46,13 @@ Storage.prototype = {
   setup: function(options) {
     this.options = _.extend(this._defaults, options);
     if(this.options.configFile) {
-      this.nconf.file(this.options.configFile);
+      try {
+        this.nconf.file(this.options.configFile).load();
+        this.logger.info("configuration file loaded");
+      }
+      catch(ex) {
+        this.logger.error(ex.message);
+      }
     }
   },
 
